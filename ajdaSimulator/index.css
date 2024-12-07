@@ -1,7 +1,7 @@
 .montserrat{
   font-family: "Montserrat", sans-serif;
   font-optical-sizing: auto;
-  font-weight: 80;
+  font-weight: 700;
   font-style: normal;
 }
 
@@ -54,6 +54,28 @@ div.scoreGUI {
     background-color: rgba(104.58, 146.40, 47.82, 0.20);
     border-radius: 60px;
     border: 5px #699230 solid;
+}
+
+div.orderGUI{
+    position: absolute;
+
+    width: 275px;
+    height: 275px;
+
+    margin-right: 5vw;
+    margin-top: 60vh;
+    margin-left: 80vw;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: transparent;
+}
+
+#orderImage{
+    width: 100%;
+    height: 100%;
 }
 
 .item,

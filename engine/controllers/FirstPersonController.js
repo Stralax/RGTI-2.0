@@ -4,7 +4,7 @@ import { quat, vec3, mat4 } from 'glm';
 import { Transform } from '../core/Transform.js';
 import { Inventory, Item } from '../../ajdaSimulator/Inventory.js';
 import { objectDetection } from '../../ajdaSimulator/main.js';
-import { updateBBQTimerGUI, updateScoreGUI } from '../../ajdaSimulator/guiController.js';
+import { updateBBQTimerGUI, updateScoreGUI, updateOrderGUI } from '../../ajdaSimulator/guiController.js';
 import { playGrillSound, playPointSound, playWalkingSound, stopWalkingSound, playItemSound} from '../../ajdaSimulator/audio.js';
 
 import { getGlobalViewMatrix } from '../core/SceneUtils.js';
@@ -434,6 +434,7 @@ export class FirstPersonController {
                 console.log(RecipeBurger);
                 this.Meal = Burger.name;
                 this.NumberOfOrders++;
+                updateOrderGUI(this.Meal);
             }
             else {
                 if (inventory.isInInventory(Burger) && this.Meal === Burger.name) {
@@ -442,6 +443,7 @@ export class FirstPersonController {
                     this.NumberOfOrders++;
                     this.Points += 25;
                     updateScoreGUI(this.Points);
+                    updateOrderGUI("none");
                     playPointSound();
                 }
                 else if (inventory.isInInventory(Pomfrit) && this.Meal === Pomfrit.name) {
@@ -450,6 +452,7 @@ export class FirstPersonController {
                     this.NumberOfOrders++;
                     this.Points += 25;
                     updateScoreGUI(this.Points);
+                    updateOrderGUI("none");
                     playPointSound();
                 }
                 else if (inventory.isInInventory(CocaCola) && this.Meal === CocaCola.name) {
@@ -458,6 +461,7 @@ export class FirstPersonController {
                     this.NumberOfOrders++;
                     this.Points += 25;
                     updateScoreGUI(this.Points);
+                    updateOrderGUI("none");
                     playPointSound();
                 }
             }
