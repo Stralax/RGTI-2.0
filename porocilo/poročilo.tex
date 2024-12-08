@@ -79,15 +79,19 @@ Potem se odvisno od objekta, sproži interakcija z vmesnikom Inventory. Igralec 
 Collision je pa implementiran v vmesniku Physics, ki nam pove, če je igralec trčil v objekt ali ne.
 
 Predmeti določeni za interakcijo: 
-- žar, ki omogoča pečenje mesa v določenem času
-- natakar, (ki je v tej verziji igre predstavljen kot tabla za obvestila7naročila) ki omogoča igralcu da prevzame naročilo, ali ga izroči
-- delovna miza, ki omogoča igralcu da iz določenih sestavin naredi naročilo
+\begin{enumerate}
+\item žar, ki omogoča pečenje mesa v določenem času
+\item natakar, (ki je v tej verziji igre predstavljen kot tabla za obvestila7naročila) ki omogoča igralcu da prevzame naročilo, ali ga izroči
+\item delovna miza, ki omogoča igralcu da iz določenih sestavin naredi naročilo
+\end{enumerate}
 
 Poleg interakcije, implementirane so tudi animacije:
-- pobiranje kruha
-- pobiranje mesa z žara 
-- dajanje pljeskavice na žar
-- animacija dima ko je meso na žaru
+\begin{enumerate}
+\item pobiranje kruha
+\item pobiranje mesa z žara 
+\item dajanje pljeskavice na žar
+\item animacija dima ko je meso na žaru
+\end{enumerate}
 
 Za izris scene, svetlobe, materialov in tekstur je uporabljen Shader, ki podatke dobi iz Unit Renderer-ja. Kar se tiče vporabniškega vmesnika, implementirane so funkcije za prikazovanje inventara pridobljenih točk,
 timer-ja za pečenja mesa in recepta za trenutno naročilo. V vmesniku so tudi implementirane funkcije za predvajanje zvoka, ki se sproži ob določenih dogodkih v igri.

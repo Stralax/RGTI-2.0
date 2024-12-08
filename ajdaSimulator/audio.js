@@ -8,7 +8,7 @@ let musicAudio = document.getElementById("audioMusic");
 function initAudio() {
     grillAudio.volume = 0.2;
     itemAudio.volume = 0.2;
-    pointAudio.volume = 1;
+    pointAudio.volume = 0.2;
     restaurantAudio.volume = 0.8;
     musicAudio.volume = 0.08;
     walkingAudio.volume = 1;

@@ -473,6 +473,7 @@ export class FirstPersonController {
                 this.Meal = this.GetReceipt(); //Burger.name;
                 this.NumberOfOrders++;
                 updateOrderGUI(this.Meal);
+                playItemSound();
             }
             else {
                 if (inventory.isInInventory(Burger) && this.Meal === Burger.name) {
