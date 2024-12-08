@@ -287,7 +287,7 @@ export class UnlitRenderer extends BaseRenderer {
             this.particleData[baseIndex + 3] = Math.random() * 0.2 - 0.0;  // X velocity
             this.particleData[baseIndex + 4] = Math.random() * 0.5;       // Y velocity
             this.particleData[baseIndex + 5] = Math.random() * 0.2 - 0.0; // Z velocity
-            this.particleData[baseIndex + 6] = 10000.0; // Lifetime
+            this.particleData[baseIndex + 6] = 1.0; // Lifetime
         }
           
 
@@ -536,109 +536,109 @@ export class UnlitRenderer extends BaseRenderer {
         
 
 
-       //SMOKE
-       // Smoke rendering
+    //    //SMOKE
+    //    // Smoke rendering
 
-        // Smoke Rendering
-        const smokeViewProjectionMatrix = mat4.multiply(
-            mat4.create(),
-            projectionMatrix,
-            viewMatrix
-        );
+    //     // Smoke Rendering
+    //     const smokeViewProjectionMatrix = mat4.multiply(
+    //         mat4.create(),
+    //         projectionMatrix,
+    //         viewMatrix
+    //     );
 
-        // Create a texture view for the intermediate texture
-       // const intermediateTextureView = this.intermediateTexture.createView();
+    //     // Create a texture view for the intermediate texture
+    //    // const intermediateTextureView = this.intermediateTexture.createView();
 
-        // Create a sampler for the intermediate texture
-        const intermediateSampler = this.device.createSampler();
+    //     // Create a sampler for the intermediate texture
+    //     const intermediateSampler = this.device.createSampler();
 
-        // Bind the intermediate texture to the smoke pipeline
-        const smokeTextureBindGroup2 = this.device.createBindGroup({
-            layout: this.smokePipeline.getBindGroupLayout(3), // Use the next available binding slot
-            entries: [
-                { binding: 0, resource: intermediateTextureView }, // Scene texture
-                { binding: 1, resource: intermediateSampler }, // Sampler for the texture
-            ],
-        });
-
-        
-
-        //console.log(this.swapchainFormat);
-
-        this.device.queue.writeBuffer(this.smokeUniformBuffer, 0, smokeViewProjectionMatrix);
-
-        const smokeRenderPass = encoder.beginRenderPass({
-            colorAttachments: [
-                {
-                    view: this.context.getCurrentTexture().createView(),
-                    loadOp: 'load',//'load', // Keep the scene render intact
-                    storeOp: 'store',
-                    clearValue: [0, 0, 0, 0],
-                },
-            ],
-            depthStencilAttachment: {
-                view: this.depthTexture.createView(),
-                depthLoadOp: 'load', // Reuse the depth buffer from the scene
-                depthStoreOp: 'store',
-            },
-            blendColor: {
-                srcFactor: 'src-alpha',
-                dstFactor: 'one-minus-src-alpha',
-                blendOp: 'add',
-            },
-            alphaBlend: {
-                srcFactor: 'src-alpha',
-                dstFactor: 'one-minus-src-alpha',
-                blendOp: 'add',
-            }
-        });
-
-
-        
-        //console.log(smokeViewProjectionMatrix);
-
-        
-        const sampler = this.device.createSampler({
-            magFilter: 'linear',  // Kvalitetno povečanje
-            minFilter: 'linear',  // Kvalitetno zmanjšanje
-            mipmapFilter: 'linear',  // Filter za mipmape
-            addressModeU: 'clamp-to-edge', // Koordinate zunaj [0, 1] se bodo obrezale
-            addressModeV: 'clamp-to-edge',
-            addressModeW: 'clamp-to-edge',
-        });
-        
-        //console.log(this.SmokeTexture);
-        //console.log(sampler);
-        // Load the smoke texture and sampler
-        this.smokeTextureBindGroup = this.device.createBindGroup({
-            layout: this.smokePipeline.getBindGroupLayout(2), // New bind group layout for texture and sampler
-            entries: [
-                { binding: 0, resource: this.SmokeTexture   },
-                { binding: 1, resource:  sampler },
-            ],
-        });
-
-        this.updateParticles();
-        this.device.queue.writeBuffer(this.particleBuffer, 0, this.particleData);
-
-        // Set pipeline and draw smoke particles
-        smokeRenderPass.setPipeline(this.smokePipeline);
-        smokeRenderPass.setBindGroup(0, this.smokeUniformBindGroup);
-        smokeRenderPass.setBindGroup(1, this.particleBindGroup);
-        smokeRenderPass.setBindGroup(2, this.smokeTextureBindGroup);
-        smokeRenderPass.setBindGroup(3, smokeTextureBindGroup2);
-
-
-        //console.log(camera.getComponentOfType(Transform).translation);
+    //     // Bind the intermediate texture to the smoke pipeline
+    //     const smokeTextureBindGroup2 = this.device.createBindGroup({
+    //         layout: this.smokePipeline.getBindGroupLayout(3), // Use the next available binding slot
+    //         entries: [
+    //             { binding: 0, resource: intermediateTextureView }, // Scene texture
+    //             { binding: 1, resource: intermediateSampler }, // Sampler for the texture
+    //         ],
+    //     });
 
         
 
+    //     //console.log(this.swapchainFormat);
 
-        //smokeRenderPass.draw(6, this.particleCount, 0, 0); // Instanced draw
+    //     this.device.queue.writeBuffer(this.smokeUniformBuffer, 0, smokeViewProjectionMatrix);
 
-        smokeRenderPass.draw(6, this.particleCount, 0, 0);
+    //     const smokeRenderPass = encoder.beginRenderPass({
+    //         colorAttachments: [
+    //             {
+    //                 view: this.context.getCurrentTexture().createView(),
+    //                 loadOp: 'load',//'load', // Keep the scene render intact
+    //                 storeOp: 'store',
+    //                 clearValue: [0, 0, 0, 0],
+    //             },
+    //         ],
+    //         depthStencilAttachment: {
+    //             view: this.depthTexture.createView(),
+    //             depthLoadOp: 'load', // Reuse the depth buffer from the scene
+    //             depthStoreOp: 'store',
+    //         },
+    //         blendColor: {
+    //             srcFactor: 'src-alpha',
+    //             dstFactor: 'one-minus-src-alpha',
+    //             blendOp: 'add',
+    //         },
+    //         alphaBlend: {
+    //             srcFactor: 'src-alpha',
+    //             dstFactor: 'one-minus-src-alpha',
+    //             blendOp: 'add',
+    //         }
+    //     });
 
-        smokeRenderPass.end();
+
+        
+    //     //console.log(smokeViewProjectionMatrix);
+
+        
+    //     const sampler = this.device.createSampler({
+    //         magFilter: 'linear',  // Kvalitetno povečanje
+    //         minFilter: 'linear',  // Kvalitetno zmanjšanje
+    //         mipmapFilter: 'linear',  // Filter za mipmape
+    //         addressModeU: 'clamp-to-edge', // Koordinate zunaj [0, 1] se bodo obrezale
+    //         addressModeV: 'clamp-to-edge',
+    //         addressModeW: 'clamp-to-edge',
+    //     });
+        
+    //     //console.log(this.SmokeTexture);
+    //     //console.log(sampler);
+    //     // Load the smoke texture and sampler
+    //     this.smokeTextureBindGroup = this.device.createBindGroup({
+    //         layout: this.smokePipeline.getBindGroupLayout(2), // New bind group layout for texture and sampler
+    //         entries: [
+    //             { binding: 0, resource: this.SmokeTexture   },
+    //             { binding: 1, resource:  sampler },
+    //         ],
+    //     });
+
+    //     this.updateParticles();
+    //     this.device.queue.writeBuffer(this.particleBuffer, 0, this.particleData);
+
+    //     // Set pipeline and draw smoke particles
+    //     smokeRenderPass.setPipeline(this.smokePipeline);
+    //     smokeRenderPass.setBindGroup(0, this.smokeUniformBindGroup);
+    //     smokeRenderPass.setBindGroup(1, this.particleBindGroup);
+    //     smokeRenderPass.setBindGroup(2, this.smokeTextureBindGroup);
+    //     smokeRenderPass.setBindGroup(3, smokeTextureBindGroup2);
+
+
+    //     //console.log(camera.getComponentOfType(Transform).translation);
+
+        
+
+
+    //     //smokeRenderPass.draw(6, this.particleCount, 0, 0); // Instanced draw
+
+    //     smokeRenderPass.draw(6, this.particleCount, 0, 0);
+
+        // smokeRenderPass.end();
 
 
 
@@ -702,7 +702,7 @@ export class UnlitRenderer extends BaseRenderer {
 
     renderPrimitive(primitive) {
 
-        const material = primitive.material;
+        let material = primitive.material;
         const { materialUniformBuffer, materialBindGroup } = this.prepareMaterial(primitive.material);
 
         if (primitive && primitive.material && !primitive.material.baseFactor) {
@@ -716,7 +716,24 @@ export class UnlitRenderer extends BaseRenderer {
         }
         else{
 
-            //console.log(primitive.);
+            if(!material){
+                const defaultMaterial = new Material({
+                baseTexture: null, // Ni teksture
+                emissionTexture: null,
+                normalTexture: null,
+                occlusionTexture: null,
+                roughnessTexture: null,
+                metalnessTexture: null,
+            
+                baseFactor: [1, 1, 1, 1], // Bela barva
+                emissionFactor: [0, 0, 0], // Brez emisij
+                normalFactor: 1, // Brez prilagoditve normale
+                occlusionFactor: 1, // Privzeto brez prilagoditve okluzije
+                roughnessFactor: 1, // Polna hrapavost
+                metalnessFactor: 0, // Brez kovinskega videza
+                });
+                material = defaultMaterial
+            } 
             //this.device.queue.writeBuffer(materialUniformBuffer, 0, new Float32Array(primitive.material.baseFactor));
            // this.device.queue.writeBuffer(materialUniformBuffer, 0, new Float32Array([0.1,0.1,0.1,1]));
            this.device.queue.writeBuffer(materialUniformBuffer, 0, new Float32Array([

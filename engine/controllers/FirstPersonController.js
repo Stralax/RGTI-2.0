@@ -57,7 +57,17 @@ breadsFirstCordinates.set("Bread01.011", [113.66226959228516, 3.6724634170532227
 breadsFirstCordinates.set("Bread01.012", [112.9825668334961, 3.6724634170532227, 28.745243072509766]);
 
 
-
+const smokeFirtstCordinates = new Map();
+smokeFirtstCordinates.set("Dim.001", [93.47676849365234, 4.437288284301758, -3.6727304458618164]);
+smokeFirtstCordinates.set("Dim.002", [94.03723907470703, 4.985434532165527, -3.6727304458618164]);
+smokeFirtstCordinates.set("Dim.003", [93.3464126586914, 5.647188663482666, -3.6727304458618164]);
+smokeFirtstCordinates.set("Dim.004", [94.11396026611328, 6.384382724761963, -3.6727304458618164]);
+smokeFirtstCordinates.set("Dim.005", [93.2929916381836, 6.775891304016113, -3.6727304458618164]);
+smokeFirtstCordinates.set("Dim.006", [94.31440734863281, 7.323601245880127, -4.881188869476318]);
+smokeFirtstCordinates.set("Dim.007", [93.47676849365234, 7.922301292419434, -3.6727304458618164]);
+smokeFirtstCordinates.set("Dim.008", [94.29032135009766, 8.299554824829102, -3.6727304458618164]);
+smokeFirtstCordinates.set("Dim.009", [94.11396026611328, 8.847214698791504, -3.6727304458618164]);
+smokeFirtstCordinates.set("Dim.010",[93.62873077392578, 9.17710018157959, -3.6727304458618164]);
 
 
 const RecipeBurger = [Buns, BurgerMeat, VegetablesForBurger];
@@ -66,7 +76,7 @@ const Burger = new Item("Burger", 1);
 
 export class FirstPersonController {
 
-    constructor(node, domElement, burgerAnimation, {
+    constructor(node, domElement, burgerAnimation, smoke, {
         pitch = 0,
         yaw = 0,
         velocity = [0, 0, 0],
@@ -98,6 +108,7 @@ export class FirstPersonController {
         this.node = node;
         this.domElement = domElement;
         this.burgerAnimation = burgerAnimation;
+        this.smoke = this.inicializeSmoke(smoke);
 
         this.keys = {};
 
@@ -142,6 +153,9 @@ export class FirstPersonController {
         this.BBQAnimationActivatedEnter = false;
         this.BBQAnimationActivatedExit = false;
 
+        this.timeSmoke = 0.01;
+        this.smokeTimer = 0;
+
 
         this.initHandlers();
     }
@@ -171,15 +185,37 @@ export class FirstPersonController {
         if (this.activeTimer > 0) {
             this.activeTimer -= dt; // Reduce timer by delta time
             //console.log(Math.floor(this.activeTimer));
+            if(this.activeTimer<14){
+                this.smoke = this.smokeAnimation(this.smoke);
+                this.timeSmoke = 0.007;
+            }
+            if(this.activeTimer<10){
+                this.timeSmoke = 0.01;
+            }
+            if(this.activeTimer<5){
+                this.timeSmoke = 0.007;
+            }
             if (this.activeTimer <= 0) {
                 this.activeTimer = 0;  // Clamp timer
                 this.WaitingForTheMeat = false; // Turn off the boolean
                 //console.log("Deactivated.");
                 //console.log(Math.floor(this.activeTimer));
+                //this.smoothSmoke(this.smoke);
+                this.timeSmoke = 0.01;
+                this.smokeTimer = 5;
             }
 
             updateBBQTimerGUI(Math.floor(this.activeTimer));
         }
+
+        if (this.smokeTimer > 0) {
+            this.smokeTimer -= dt;
+            this.smoothSmoke(this.smoke);
+            if (this.smokeTimer <= 0) {
+                this.inicializeSmoke(this.smoke);
+            }
+        }
+
 
         if (this.AnimationTimer > 0) {
             this.AnimationTimer -= dt;
@@ -477,7 +513,7 @@ export class FirstPersonController {
             playItemSound();
             inventory.displayInventory();
 
-            console.log(this.breadAnimation);
+            //console.log(this.breadAnimation);
             this.breadAnimationActivated = true;
             this.AnimationTimer = 1;
 
@@ -600,7 +636,6 @@ export class FirstPersonController {
     }
 
     GetReceipt(){
-
         const choose = [Burger.name, Pomfrit.name, CocaCola.name];
         const random = Math.random();
         let rnd = 0;
@@ -613,4 +648,66 @@ export class FirstPersonController {
         }
         return choose[rnd];
     }
+
+    inicializeSmoke(smoke1){
+
+        for(var i=0; i<smoke1.length; i++){
+            //console.log(smoke1[i].name);
+            smoke1[i].getComponentOfType(Transform).translation = smokeFirtstCordinates.get(smoke1[i].name);
+        }
+
+        for(let i=0; i<smoke1.length; i++){
+            let a = smoke1[i].getComponentOfType(Transform).translation[0];
+            let b = smoke1[i].getComponentOfType(Transform).translation[1];
+            let c = smoke1[i].getComponentOfType(Transform).translation[2]-1.5;
+
+            smoke1[i].getComponentOfType(Transform).translation = [a, b, c]; 
+            if(i%2==1 && i!=1){
+                smoke1[i].getComponentOfType(Transform).translation = [a, b+0.5, c];
+                //console.log(smoke1[i].getComponentOfType(Transform).translation); 
+            }
+        }
+
+        this.timeSmoke = 0.01;
+        for(let i=0; i<smoke1.length; i++){
+            let a = smoke1[i].getComponentOfType(Transform).translation[0];
+            let b = smoke1[i].getComponentOfType(Transform).translation[1]-6.5;
+            let c = smoke1[i].getComponentOfType(Transform).translation[2];
+
+            smoke1[i].getComponentOfType(Transform).translation = [a, b, c]; 
+        }
+
+        return smoke1;
+    }
+
+    smokeAnimation(smoke1){
+        for(let i=0; i<smoke1.length; i++){
+            let a = smoke1[i].getComponentOfType(Transform).translation[0];
+            let b = smoke1[i].getComponentOfType(Transform).translation[1] + this.timeSmoke;
+            let c = smoke1[i].getComponentOfType(Transform).translation[2];
+            if(b>=10){
+                b=3.5;
+            }
+            smoke1[i].getComponentOfType(Transform).translation = [a, b, c]; 
+        }
+
+        return smoke1;
+    }
+
+    smoothSmoke(smoke1){
+        for(let i=0; i<smoke1.length; i++){
+            let a = smoke1[i].getComponentOfType(Transform).translation[0];
+            let b = smoke1[i].getComponentOfType(Transform).translation[1];
+            let c = smoke1[i].getComponentOfType(Transform).translation[2];
+            if(b>=8.5){
+                b=1.5;
+                smoke1[i].getComponentOfType(Transform).translation = [a, b, c];
+            }
+            if(b>3.5){
+                smoke1[i].getComponentOfType(Transform).translation = [a, b + this.timeSmoke, c];     
+            }
+        }
+        return smoke1;
+    }
+
 }

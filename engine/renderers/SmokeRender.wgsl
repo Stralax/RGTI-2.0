@@ -27,11 +27,13 @@ fn vertex_main(@builtin(vertex_index) vertexIndex: u32, @builtin(instance_index)
     let particle = particles[instanceIndex]; // Access the particle data based on the instance
 
     // Calculate the new position of the particle
-    var newPosition = particle.position + particle.velocity * particle.lifetime;
-    newPosition.y += particle.lifetime * 0.1; // Modify Y position based on lifetime for rising effect
+    //var newPosition = particle.position + particle.velocity * particle.lifetime;
+    //newPosition.y += particle.lifetime * 0.1; // Modify Y position based on lifetime for rising effect
 
+
+    var newPosition = particle.position;
     var output: VertexOutput;
-    output.position = viewProjectionMatrix * vec4(newPosition, 1.0); // Transform position using the view-projection matrix
+    output.position = vec4(newPosition, 1.0); // Transform position using the view-projection matrix
 
     // Simple UV mapping based on position (you can adjust this for more complex mapping)
     //output.uv = vec2<f32>(newPosition.x, newPosition.z);  // Example UV mapping
@@ -44,14 +46,39 @@ fn vertex_main(@builtin(vertex_index) vertexIndex: u32, @builtin(instance_index)
 // Fragment shader
 @fragment
 fn fragment_main(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
-    // Samo vzorči osnovno teksturo (scene texture)
-    let sceneColor = textureSample(sceneTexture, sceneSampler, uv);
+    // // Samo vzorči osnovno teksturo (scene texture)
+    // let sceneColor = textureSample(sceneTexture, sceneSampler, uv);
 
-    // Samo vzorči dimno teksturo (smoke texture)
-    let smokeColor = textureSample(smokeTexture, smokeSampler, uv);
+    // // Samo vzorči dimno teksturo (smoke texture)
+    // //let smokeColor = textureSample(smokeTexture, smokeSampler, uv);
 
-    // Preprosto mešanje barve scene in dima (dodajanje barve dima na osnovno sliko)
-    let outputColor = sceneColor + smokeColor * 0.5; // Dodaj dim k osnovni sceni
+    // // Preprosto mešanje barve scene in dima (dodajanje barve dima na osnovno sliko)
+    // //let outputColor = /*sceneColor + */smokeColor; // Dodaj dim k osnovni sceni
 
-    return outputColor;
+    // // Osnovna barva (prva faza)
+    // let baseColor = vec4<f32>(0.8, 0.7, 0.6, 1.0);
+
+    // // Proceduralni dim (lahko temelji na šumu)
+    // // let uv = fragCoord.xy / vec2<f32>(canvasWidth, canvasHeight);
+    // // let noise = sin(uv.x * 10.0 + uv.y * 15.0 + time) * 0.5 + 0.5;
+    // let smokeColor = vec4<f32>(0.5, 0.5, 0.5, 0.2 * 0.3);
+
+    // // Združevanje
+    // return mix(baseColor, smokeColor, smokeColor.a);
+
+    // //return outputColor;
+
+     // Ustvari osnovno barvo (npr. rjava barva za sceno)
+    let baseColor = vec4<f32>(0.8, 0.7, 0.6, 1.0);
+
+    // Proceduralni šum za dim
+    var noise = sin(uv.x * 10.0 + uv.y * 15.0  * 0.5) * 0.5 + 0.5;
+    noise += sin(uv.x * 20.0 + uv.y * 10.0 - 0.3) * 0.25;
+    noise = smoothstep(0.3, 0.7, noise); // Zmehča robove šuma
+
+    // Dimna barva
+    let smokeColor = vec4<f32>(0.5, 0.5, 0.5, 0.3 * noise);
+
+    // Mešanje dima z osnovno barvo
+    return mix(baseColor, smokeColor, smokeColor.a);
 }

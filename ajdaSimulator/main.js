@@ -59,7 +59,22 @@ const burgerAnimation = loader.loadNode("Patty Animation");
 burgerAnimation.getComponentOfType(Transform).translation = [0, 0, 0];
 
 
-camera.addComponent(new FirstPersonController(camera, canvas, burgerAnimation));
+let smoke1 = loader.loadNode('Dim.001');
+let smoke2 = loader.loadNode('Dim.002');
+let smoke3 = loader.loadNode('Dim.003');
+let smoke4 = loader.loadNode('Dim.004');
+let smoke5 = loader.loadNode('Dim.005');
+let smoke6 = loader.loadNode('Dim.006');
+let smoke7 = loader.loadNode('Dim.007');
+let smoke8 = loader.loadNode('Dim.008');
+let smoke9 = loader.loadNode('Dim.009');
+let smoke10 = loader.loadNode('Dim.010');
+const smoke = [smoke1, smoke2, smoke3, smoke4, smoke5, smoke6, smoke7, smoke8, smoke9, smoke10];
+
+
+
+
+camera.addComponent(new FirstPersonController(camera, canvas, burgerAnimation, smoke));
 camera.isDynamic = true;
 camera.aabb = {
     min: [-0.2, -0.2, -0.2],
