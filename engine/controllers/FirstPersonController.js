@@ -668,7 +668,7 @@ export class FirstPersonController {
             }
         }
 
-        this.timeSmoke = 0.01;
+        this.timeSmoke = 0.02;
         for(let i=0; i<smoke1.length; i++){
             let a = smoke1[i].getComponentOfType(Transform).translation[0];
             let b = smoke1[i].getComponentOfType(Transform).translation[1]-6.5;
