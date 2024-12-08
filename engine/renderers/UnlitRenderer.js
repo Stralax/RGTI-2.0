@@ -78,6 +78,8 @@ export class UnlitRenderer extends BaseRenderer {
     static particleCount;
     static smokeTextureBindGroup;
     static SmokeTexture = null;
+    static intermediateTexture;
+    static swapchainFormat;
 
     constructor(canvas) {
         super(canvas);
@@ -92,7 +94,7 @@ export class UnlitRenderer extends BaseRenderer {
         defaultImage.onload = () => {
             const texture = this.device.createTexture({
                 size: [defaultImage.width, defaultImage.height, 1],
-                format: 'rgba8unorm',
+                format: 'bgra8unorm',
                 usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
             });
     
@@ -108,7 +110,7 @@ export class UnlitRenderer extends BaseRenderer {
 
     initializeDefaultTexture() {
         const defaultImage = new Image();
-        defaultImage.src = '../../ajdaSimulator/scene/Floor.png';
+        defaultImage.src = "../../ajdaSimulator/scene/"+"Floor" + ".png";
     
 
         // Ensure texture is loaded before using it
@@ -123,6 +125,8 @@ export class UnlitRenderer extends BaseRenderer {
 
     async initialize() {
         await super.initialize();
+
+        this.swapchainFormat = navigator.gpu.getPreferredCanvasFormat();
 
         const code = await fetch(new URL('UnlitRenderer.wgsl', import.meta.url))
             .then(response => response.text());
@@ -181,6 +185,20 @@ export class UnlitRenderer extends BaseRenderer {
                 bindGroupLayouts: [
                     uniformBindGroupLayout,       // Layout for uniform data
                     particleBindGroupLayout,      // Layout for particle data
+                    this.device.createBindGroupLayout({ // Layout for texture data
+                        entries: [
+                            {
+                                binding: 0,
+                                visibility: GPUShaderStage.FRAGMENT,
+                                texture: { sampleType: "float" },
+                            },
+                            {
+                                binding: 1,
+                                visibility: GPUShaderStage.FRAGMENT,
+                                sampler: { type: "filtering" },
+                            },
+                        ],
+                    }),
                     this.device.createBindGroupLayout({ // Layout for texture data
                         entries: [
                             {
@@ -263,13 +281,13 @@ export class UnlitRenderer extends BaseRenderer {
             const baseIndex = i * 8;
         
             // Position, velocity, and lifetime initialization remain the same
-            this.particleData[baseIndex + 0] = smokeOrigin[0] + Math.random() * 0.5 - 0.25; // X
-            this.particleData[baseIndex + 1] = smokeOrigin[1] + Math.random() * 0.5;    // Y
-            this.particleData[baseIndex + 2] = smokeOrigin[2] + Math.random() * 0.5 - 0.25; // Z
+            this.particleData[baseIndex + 0] = smokeOrigin[0] ; // X
+            this.particleData[baseIndex + 1] = smokeOrigin[1] ;    // Y
+            this.particleData[baseIndex + 2] = smokeOrigin[2] ; // Z
             this.particleData[baseIndex + 3] = Math.random() * 0.2 - 0.0;  // X velocity
             this.particleData[baseIndex + 4] = Math.random() * 0.5;       // Y velocity
             this.particleData[baseIndex + 5] = Math.random() * 0.2 - 0.0; // Z velocity
-            this.particleData[baseIndex + 6] = 10.0; // Lifetime
+            this.particleData[baseIndex + 6] = 10000.0; // Lifetime
         }
           
 
@@ -281,7 +299,7 @@ export class UnlitRenderer extends BaseRenderer {
         this.depthTexture = this.device.createTexture({
             format: 'depth24plus',
             size: [this.canvas.width, this.canvas.height],
-            usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
         });
     }
 
@@ -430,8 +448,19 @@ export class UnlitRenderer extends BaseRenderer {
         if (this.depthTexture.width !== this.canvas.width || this.depthTexture.height !== this.canvas.height) {
             this.recreateDepthTexture();
         }
-        
 
+        
+        // Create an intermediate texture for the scene render
+        if (!this.intermediateTexture) {
+            this.intermediateTexture = this.device.createTexture({
+                format: this.swapchainFormat,
+                size: [this.canvas.width, this.canvas.height],
+                usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+            });
+        }
+        const intermediateTextureView = this.intermediateTexture.createView();
+
+        
         const encoder = this.device.createCommandEncoder();
         this.renderPass = encoder.beginRenderPass({
             colorAttachments: [
@@ -517,7 +546,24 @@ export class UnlitRenderer extends BaseRenderer {
             viewMatrix
         );
 
-        //console.log(this.smokeUniformBuffer);
+        // Create a texture view for the intermediate texture
+       // const intermediateTextureView = this.intermediateTexture.createView();
+
+        // Create a sampler for the intermediate texture
+        const intermediateSampler = this.device.createSampler();
+
+        // Bind the intermediate texture to the smoke pipeline
+        const smokeTextureBindGroup2 = this.device.createBindGroup({
+            layout: this.smokePipeline.getBindGroupLayout(3), // Use the next available binding slot
+            entries: [
+                { binding: 0, resource: intermediateTextureView }, // Scene texture
+                { binding: 1, resource: intermediateSampler }, // Sampler for the texture
+            ],
+        });
+
+        
+
+        //console.log(this.swapchainFormat);
 
         this.device.queue.writeBuffer(this.smokeUniformBuffer, 0, smokeViewProjectionMatrix);
 
@@ -525,8 +571,9 @@ export class UnlitRenderer extends BaseRenderer {
             colorAttachments: [
                 {
                     view: this.context.getCurrentTexture().createView(),
-                    loadOp: 'load', // Keep the scene render intact
+                    loadOp: 'load',//'load', // Keep the scene render intact
                     storeOp: 'store',
+                    clearValue: [0, 0, 0, 0],
                 },
             ],
             depthStencilAttachment: {
@@ -534,12 +581,31 @@ export class UnlitRenderer extends BaseRenderer {
                 depthLoadOp: 'load', // Reuse the depth buffer from the scene
                 depthStoreOp: 'store',
             },
+            blendColor: {
+                srcFactor: 'src-alpha',
+                dstFactor: 'one-minus-src-alpha',
+                blendOp: 'add',
+            },
+            alphaBlend: {
+                srcFactor: 'src-alpha',
+                dstFactor: 'one-minus-src-alpha',
+                blendOp: 'add',
+            }
         });
+
+
         
         //console.log(smokeViewProjectionMatrix);
 
         
-        const sampler = this.device.createSampler();
+        const sampler = this.device.createSampler({
+            magFilter: 'linear',  // Kvalitetno povečanje
+            minFilter: 'linear',  // Kvalitetno zmanjšanje
+            mipmapFilter: 'linear',  // Filter za mipmape
+            addressModeU: 'clamp-to-edge', // Koordinate zunaj [0, 1] se bodo obrezale
+            addressModeV: 'clamp-to-edge',
+            addressModeW: 'clamp-to-edge',
+        });
         
         //console.log(this.SmokeTexture);
         //console.log(sampler);
@@ -552,17 +618,20 @@ export class UnlitRenderer extends BaseRenderer {
             ],
         });
 
+        this.updateParticles();
+        this.device.queue.writeBuffer(this.particleBuffer, 0, this.particleData);
+
         // Set pipeline and draw smoke particles
         smokeRenderPass.setPipeline(this.smokePipeline);
         smokeRenderPass.setBindGroup(0, this.smokeUniformBindGroup);
         smokeRenderPass.setBindGroup(1, this.particleBindGroup);
         smokeRenderPass.setBindGroup(2, this.smokeTextureBindGroup);
+        smokeRenderPass.setBindGroup(3, smokeTextureBindGroup2);
 
 
         //console.log(camera.getComponentOfType(Transform).translation);
 
-        //this.updateParticles();
-        this.device.queue.writeBuffer(this.particleBuffer, 0, this.particleData);
+        
 
 
         //smokeRenderPass.draw(6, this.particleCount, 0, 0); // Instanced draw
