@@ -5,17 +5,23 @@ struct Particle {
     lifetime: f32,       // Lifetime of the particle (duration)
 };
 
-// Declare storage buffer and sampler
+// Declare storage buffer and samplers
 @group(1) @binding(0) var<storage, read> particles: array<Particle>; // Particle data
 @group(2) @binding(0) var smokeTexture: texture_2d<f32>; // Texture for smoke particles
-@group(2) @binding(1) var smokeSampler: sampler; // Sampler for the texture
+@group(2) @binding(1) var smokeSampler: sampler; // Sampler for the smoke texture
+@group(3) @binding(0) var sceneTexture: texture_2d<f32>; // Scene texture
+@group(3) @binding(1) var sceneSampler: sampler; // Sampler for the scene texture
+
+// Declare the view-projection matrix (to be passed from the CPU)
+@group(0) @binding(0) var<uniform> viewProjectionMatrix: mat4x4<f32>; // View-projection matrix for camera
 
 // Define the vertex output structure
 struct VertexOutput {
-    @builtin(position) position: vec4f, // Position to pass to the fragment shader
-    @location(0) uv: vec2f,             // Texture coordinates (UV)
+    @builtin(position) position: vec4<f32>, // Position to pass to the fragment shader
+    @location(0) uv: vec2<f32>,             // Texture coordinates (UV)
 };
 
+// Vertex shader
 @vertex
 fn vertex_main(@builtin(vertex_index) vertexIndex: u32, @builtin(instance_index) instanceIndex: u32) -> VertexOutput {
     let particle = particles[instanceIndex]; // Access the particle data based on the instance
@@ -24,25 +30,28 @@ fn vertex_main(@builtin(vertex_index) vertexIndex: u32, @builtin(instance_index)
     var newPosition = particle.position + particle.velocity * particle.lifetime;
     newPosition.y += particle.lifetime * 0.1; // Modify Y position based on lifetime for rising effect
 
-    // Define the texture coordinates based on the particle's position
-    //let uv = vec2f(particle.position.x, particle.position.z); // Simple UV mapping based on position
-
     var output: VertexOutput;
-    var viewProjectionMatrix: mat4x4<f32>;
-    output.position = viewProjectionMatrix  * vec4f(newPosition, 1.0); // Set the position in homogeneous coordinates
-    //output.uv = uv;                           // Pass UV to the fragment shader
+    output.position = viewProjectionMatrix * vec4(newPosition, 1.0); // Transform position using the view-projection matrix
+
+    // Simple UV mapping based on position (you can adjust this for more complex mapping)
+    //output.uv = vec2<f32>(newPosition.x, newPosition.z);  // Example UV mapping
+
+    output.uv = (newPosition.xz + vec2(1.0, 1.0)) * 0.5;
 
     return output;
 }
 
-// Define the fragment function
+// Fragment shader
 @fragment
-fn fragment_main(@location(0) uv: vec2f) -> @location(0) vec4f {
-    // Sample the texture based on UV coordinates
-    let color = textureSample(smokeTexture, smokeSampler, uv);
+fn fragment_main(@location(0) uv: vec2<f32>) -> @location(0) vec4<f32> {
+    // Samo vzorči osnovno teksturo (scene texture)
+    let sceneColor = textureSample(sceneTexture, sceneSampler, uv);
 
-    // Apply the alpha value based on the particle's lifetime (you can modify this as needed)
-    let alpha = 1.0; // Assuming the alpha is always 1 for simplicity. Adjust based on your logic
+    // Samo vzorči dimno teksturo (smoke texture)
+    let smokeColor = textureSample(smokeTexture, smokeSampler, uv);
 
-    return vec4f(color.rgb, alpha); // Return the final color with alpha
+    // Preprosto mešanje barve scene in dima (dodajanje barve dima na osnovno sliko)
+    let outputColor = sceneColor + smokeColor * 0.5; // Dodaj dim k osnovni sceni
+
+    return outputColor;
 }

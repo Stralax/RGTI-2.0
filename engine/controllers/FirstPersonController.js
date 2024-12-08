@@ -23,7 +23,7 @@ const refrigerator = ["Fridge01", "Fridge02", "Fridge03"];
 
 const trash = ["Bin01", "Bin02", "Bin03"];
 
-const waiter = ["Bulletin_Board", "SM_StickyNote_02.001", "SM_StickyNote_03.001", "SM_StickyNote_04.001", "SM_StickyNote_05.001", "SM_StickyNote_05.002"];
+const waiter = ["Bulletin_Board", "SM_StickyNote_02.001", "SM_StickyNote_03.001", "SM_StickyNote_04.001", "SM_StickyNote_05.001", "SM_StickyNote_05.002", "Cube_supa matro\ufffd\ufffd.009_0", "Cashier", "imagetostl_mesh0", "imagetostl_mesh1", "Dome_Metal_0", "Cash register", "Cash Model", "Kitchen Wall 3"];
 
 const bread = ["Bread01.000", "Bread01.001", "Bread01.002", "Bread01.003", "Bread01.004", "Bread01.005", "Bread01.006", "Bread01.007",
     "Bread01.008", "Bread01.009", "Bread01.010", "Bread01.011", "Bread01.012"/*, "Bread plate 1", "Bread plate 2", "Bread plate 3", "Bread plate 4"*/];
@@ -431,8 +431,10 @@ export class FirstPersonController {
 
             if (this.NumberOfOrders % 2 == 0) {
                 // funkcija za dodeljivanje koja porudzbina se trazi
+
+
                 console.log(RecipeBurger);
-                this.Meal = Burger.name;
+                this.Meal = this.GetReceipt(); //Burger.name;
                 this.NumberOfOrders++;
                 updateOrderGUI(this.Meal);
             }
@@ -450,7 +452,7 @@ export class FirstPersonController {
                     inventory.removeItem(Pomfrit.name);
                     console.log("Svaka cast");
                     this.NumberOfOrders++;
-                    this.Points += 25;
+                    this.Points += 15;
                     updateScoreGUI(this.Points);
                     updateOrderGUI("none");
                     playPointSound();
@@ -459,7 +461,7 @@ export class FirstPersonController {
                     inventory.removeItem(CocaCola.name);
                     console.log("Svaka cast");
                     this.NumberOfOrders++;
-                    this.Points += 25;
+                    this.Points += 5;
                     updateScoreGUI(this.Points);
                     updateOrderGUI("none");
                     playPointSound();
@@ -595,5 +597,20 @@ export class FirstPersonController {
         }else{
             stopWalkingSound();
         }
+    }
+
+    GetReceipt(){
+
+        const choose = [Burger.name, Pomfrit.name, CocaCola.name];
+        const random = Math.random();
+        let rnd = 0;
+        if (random < 0.33) {
+            rnd = 0; // 50% verjetnost
+        } else if (random < 0.66) {
+            rnd = 1; // 25% verjetnost
+        } else {
+            rnd = 2; // 25% verjetnost
+        }
+        return choose[rnd];
     }
 }
